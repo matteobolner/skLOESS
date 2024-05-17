@@ -1,5 +1,6 @@
 # skloess #
-============================================================
+  
+[![PyPI version](https://badge.fury.io/py/skloess.svg)](https://badge.fury.io/py/skloess)
 
 scikit-learn compatible implementation of the 
  [Locally Estimated Scatterplot Smoothing (LOESS) algorithm ](https://en.wikipedia.org/wiki/Local_regression).
