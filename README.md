@@ -12,6 +12,7 @@ References:
 - https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd423.htm
 - https://towardsdatascience.com/loess-373d43b03564
 
+
 ## How to install ##
 
 Install with `pip`:
@@ -51,6 +52,7 @@ __estimator__ : object
 __smoothing__ : float, default = 0.33
    > Smoothing value. This value is used to determine the number of closest points to use for the fitting and estimation process. For example, a value of 0.33 over 21 X values means that 7 closest points will be chosen.
 
+![alt text](https://raw.githubusercontent.com/matteobolner/skLOESS/main/examples/loess_grid.png)
 
 ## Examples ##
 
