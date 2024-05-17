@@ -3,14 +3,14 @@
 Plotting LOESS results
 =============================
 
-An example plot of :class:`skLOESS.LOESS`
+An example plot of :class:`skloess.LOESS`
 """
 
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 from itertools import product
-from skLOESS import LOESS
+from skloess import LOESS
 
 
 X = np.array(
@@ -65,17 +65,16 @@ y = np.array(
 )
 
 
-degrees=[1,2,3]
-smoothings=[0.3,0.5,0.7,1]
+degrees = [1, 2, 3]
+smoothings = [0.3, 0.5, 0.7, 1]
 
-font = {'size'   : 20}
+font = {"size": 20}
 
-matplotlib.rc('font', **font)
+matplotlib.rc("font", **font)
 
 num_rows = len(degrees)
 num_cols = len(smoothings)
 fig, axs = plt.subplots(num_rows, num_cols, figsize=(30, 20))
-
 
 
 # Generate x values
@@ -87,19 +86,21 @@ for i, (degree, smoothing) in enumerate(product(degrees, smoothings)):
     estimator.fit(X, y)
     predicted = estimator.predict(X)
     axs[row, col].scatter(X, y, label="Original Data")
-    axs[row, col].plot(X, predicted , label="Predicted Data")
+    axs[row, col].plot(X, predicted, label="Predicted Data")
     axs[row, col].title.set_text(f"degree={degree}, smoothing={smoothing}")
     axs[row, col].legend(loc="best")
     axs[row, col].grid(True)
     axs[row, col].set_xlabel("x")
     axs[row, col].set_ylabel("y")
 
-fig.suptitle("Plots of original and transformed data")
+fig.suptitle(
+    "Plots of original and transformed data with different degree and smoothing values"
+)
 
 # Adjust layout
 
-#fig.text(0.5, 0.04, 'x', ha='center', va='center')
-#fig.text(0.06, 0.5, 'y', ha='center', va='center', rotation='vertical')
+# fig.text(0.5, 0.04, 'x', ha='center', va='center')
+# fig.text(0.06, 0.5, 'y', ha='center', va='center', rotation='vertical')
 plt.tight_layout()
 # Show plot
-plt.show()
+plt.savefig("examples/loess_grid.png")

@@ -1,5 +1,5 @@
 """
-skLOESS: An extension of scikit-learn for Locally Estimated Scatterplot Smoothing
+skloess: An extension of scikit-learn for Locally Estimated Scatterplot Smoothing
 =====================================================================
 
 This module extends the scikit-learn library by providing estimators for Locally Estimated Scatterplot Smoothing (LOESS).
@@ -267,7 +267,7 @@ class LOESS(RegressorMixin, BaseEstimator):
 
     Examples
     --------
-    >>> from skLOESS import LOESS
+    >>> from skloess import LOESS
     >>> import numpy as np
     >>> X = np.arange(100).reshape(100, 1)
     >>> y = np.random.rand((100, ))

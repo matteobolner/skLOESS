@@ -1,4 +1,4 @@
-# skLOESS #
+# skloess #
 ============================================================
 
 scikit-learn compatible implementation of the 
@@ -55,7 +55,7 @@ __smoothing__ : float, default = 0.33
 ## Examples ##
 
 ```python
-from skLOESS import LOESS
+from skloess import LOESS
 
 # load X and y
 
