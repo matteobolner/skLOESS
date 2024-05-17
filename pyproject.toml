@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "skloess"
-version = "0.1.0"
+version = "0.1.1"
 description = "Sklearn compatible implementation of the Locally Estimated Scatterplot Smoothing (LOESS) algorithm"
 authors = ["matteobolner <matteo.bolner2@unibo.it>"]
 readme = "README.md"
