@@ -2,10 +2,8 @@
 
 import numpy as np
 import pytest
-from sklearn.datasets import load_iris
-from sklearn.utils._testing import assert_allclose, assert_array_equal
+from sklearn.utils._testing import assert_array_equal
 
-from skLOESS import TemplateClassifier, TemplateEstimator, TemplateTransformer
 from skLOESS.skLOESS import LOESS
 
 from sklearn.utils.estimator_checks import check_estimator
