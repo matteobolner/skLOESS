@@ -46,12 +46,13 @@ This package simply formats the pyloess code into a sklearn estimator.
 ## Parameters ##
 
 __estimator__ : object
-   > A supervised learning estimator, with a 'fit' method that returns the
-   > feature_importances_ attribute. Important features must correspond to
-   > high absolute values in the feature_importances_.
+   > A supervised learning estimator, with a 'fit' and 'predict' method.
+
+__degree__ : int, default = 1
+   > Degree of the polynomial. Default value of 1 is a linear implementation.
 
 __smoothing__ : float, default = 0.33
-   > Smoothing value. This value is used to determine the number of closest points to use for the fitting and estimation process. For example, a value of 0.33 over 21 X values means that 7 closest points will be chosen.
+   > Smoothing value. This value is used to determine the number of closest points to use for the fitting and estimation process. For example, a value of 0.33 over 21 X values means that 7 closest points will be chosen. The smoothing parameter is a number between (λ + 1) / n and 1, with λ denoting the degree of the local polynomial and n denoting the total number of observations.
 
 ![alt text](https://raw.githubusercontent.com/matteobolner/skLOESS/main/examples/loess_grid.png)
 

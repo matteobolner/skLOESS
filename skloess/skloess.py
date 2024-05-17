@@ -248,6 +248,40 @@ def estimate_linear(min_range, norm_X_global, norm_y_global, weights, norm_X_loc
     return y
 
 
+def validate_smoothing(smoothing, degree, n_obs):
+    """
+    Validate smoothing parameter for LOESS
+
+    Parameters
+    ----------
+    smoothing : float
+        Smoothing parameter
+    degree : int
+        Degree of the polynomial used to estimate the data
+    n_obs : int
+        Number of observations
+
+    Returns
+    -------
+    smoothing : float
+        Validated smoothing parameter
+
+    Raises
+    ------
+    ValueError
+        If smoothing is not between (degree + 1) / n_obs and 1
+    """
+    smoothing_min = (degree + 1) / n_obs
+    if smoothing_min <= smoothing < 1:
+        return smoothing
+    raise ValueError(
+        "Smoothing for a polynomial with {degree} degrees "
+        "must be between {smoothing_min} and 1".format(
+            degree=degree, smoothing_min=smoothing_min
+        )
+    )
+
+
 class LOESS(RegressorMixin, BaseEstimator):
     """
 
@@ -302,6 +336,7 @@ class LOESS(RegressorMixin, BaseEstimator):
         self : object
             Returns self.
         """
+        validate_smoothing(self.smoothing, self.degree, X.shape[0])
         if X.ndim == 1:
             if len(y) != len(X):
                 raise ValueError("X and y must have the same length")
@@ -310,8 +345,6 @@ class LOESS(RegressorMixin, BaseEstimator):
         X, y = self._validate_data(X, y, accept_sparse=True, reset=True)
         self.norm_X_global_, self.min_X_global, self.max_X_global = normalize_array(X)
         self.norm_y_global_, self.min_y_global, self.max_y_global = normalize_array(y)
-        if self.smoothing <= 0 or self.smoothing > 1:
-            raise ValueError("Smoothing must be > 0 and <= 1")
         self.n_neighbors_ = round(self.smoothing * X.shape[0])
         self.is_fitted_ = True
         return self
