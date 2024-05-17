@@ -1,8 +1,23 @@
+"""
+skLOESS: An extension of scikit-learn for Locally Estimated Scatterplot Smoothing
+=====================================================================
+
+This module extends the scikit-learn library by providing estimators for Locally Estimated Scatterplot Smoothing (LOESS).
+LOESS is a technique for fitting a smooth curve to noisy data.
+
+This implementation is based on the pyloess code (see https://github.com/joaofig/pyloess for details).
+
+See also:
+- https://en.wikipedia.org/wiki/Local_regression
+- https://www.itl.nist.gov/div898/handbook/pmd/section1/dep/dep144.htm
+- https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd423.htm
+
+"""
+
 import numpy as np
 import math
 from sklearn.base import BaseEstimator, RegressorMixin, _fit_context
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.estimator_checks import check_estimator
 
 
 def tricubic(x):
@@ -255,17 +270,15 @@ class LOESS(RegressorMixin, BaseEstimator):
     >>> from skLOESS import LOESS
     >>> import numpy as np
     >>> X = np.arange(100).reshape(100, 1)
-    >>> y = np.zeros((100, ))
+    >>> y = np.random.rand((100, ))
     >>> estimator = LOESS()
     >>> estimator.fit(X, y)
-    LOESS()
+    >>> estimator.predict(X)
     """
 
-    # This is a dictionary allowing to define the type of parameters.
-    # It used to validate parameter within the `_fit_context` decorator.
     _parameter_constraints = {
         "degree": [int],
-        "smoothing": [float],
+        "smoothing": [float, int],
     }
 
     def __init__(self, degree=1, smoothing=0.33):
@@ -297,6 +310,8 @@ class LOESS(RegressorMixin, BaseEstimator):
         X, y = self._validate_data(X, y, accept_sparse=True, reset=True)
         self.norm_X_global_, self.min_X_global, self.max_X_global = normalize_array(X)
         self.norm_y_global_, self.min_y_global, self.max_y_global = normalize_array(y)
+        if self.smoothing <= 0 or self.smoothing > 1:
+            raise ValueError("Smoothing must be > 0 and <= 1")
         self.n_neighbors_ = round(self.smoothing * X.shape[0])
         self.is_fitted_ = True
         return self
@@ -329,7 +344,7 @@ class LOESS(RegressorMixin, BaseEstimator):
         return denormalized_y
 
     def predict(self, X):
-        """A reference implementation of a predicting function.
+        """Estimate the y values from a collection of X values.
 
         Parameters
         ----------
@@ -343,6 +358,8 @@ class LOESS(RegressorMixin, BaseEstimator):
         """
         # Check if fit had been called
         check_is_fitted(self)
+        if type(X) in [int, float]:
+            X = np.array([[X]])
         if X.ndim == 1:
             # if input is list or array reshape it for sklearn compatibility
             X = X.reshape(-1, 1)
