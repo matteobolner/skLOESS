@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "skloess"
+version = "0.1.0"
+description = "Sklearn compatible implementation of the Locally Estimated Scatterplot Smoothing (LOESS) algorithm"
+authors = ["matteobolner <matteo.bolner2@unibo.it>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.4"
+scikit-learn = "^1.4.2"
+matplotlib = "^3.9.0"
+pytest = "^8.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
