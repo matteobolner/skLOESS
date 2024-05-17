@@ -67,6 +67,7 @@ def normalize_array(array):
         Normalized array, minimum value, and maximum value.
     """
     # Compute the minimum value of the array
+    array = array.flatten()
     min_val = np.min(array)
 
     # Compute the maximum value of the array
@@ -237,26 +238,27 @@ class LOESS(RegressorMixin, BaseEstimator):
 
     Parameters
     ----------
-    demo_param : str, default='demo_param'
-        A parameter used for demonstration of how to pass and store parameters.
-
+    degree : int, default=1
+        Degree of the polynomial used to estimate the data.
+    smoothing : float, default=0.33
+        The amount of smoothing to apply to the data.
+        This determines how many of the closest points will be used in the estimation.
     Attributes
     ----------
     is_fitted_ : bool
         A boolean indicating whether the estimator has been fitted.
-    use_matrix : bool
-    n_neighbors_
-
+    n_neighbors_: int
+        Number of closest points.
 
     Examples
     --------
-    >>> from skltemplate import TemplateEstimator
+    >>> from skLOESS import LOESS
     >>> import numpy as np
     >>> X = np.arange(100).reshape(100, 1)
     >>> y = np.zeros((100, ))
-    >>> estimator = TemplateEstimator()
+    >>> estimator = LOESS()
     >>> estimator.fit(X, y)
-    TemplateEstimator()
+    LOESS()
     """
 
     # This is a dictionary allowing to define the type of parameters.
@@ -264,13 +266,11 @@ class LOESS(RegressorMixin, BaseEstimator):
     _parameter_constraints = {
         "degree": [int],
         "smoothing": [float],
-        "use_matrix": [bool],
     }
 
-    def __init__(self, degree=1, smoothing=0.33, use_matrix=False):
+    def __init__(self, degree=1, smoothing=0.33):
         self.degree = degree
         self.smoothing = smoothing
-        self.use_matrix = use_matrix
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y):
@@ -278,40 +278,43 @@ class LOESS(RegressorMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
+        X : {array-like}, shape (n, 1)
+            The X coordinates of the input. Must be 1-dimensional (list/array/pandas series)
 
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The target values (class labels in classification, real numbers in
-            regression).
+        y : {array-like}, shape (n, 1)
+            The y coordinates of the input. Must be 1-dimensional (list/array/pandas series)
 
         Returns
         -------
         self : object
             Returns self.
         """
-        # `_validate_data` is defined in the `BaseEstimator` class.
-        # It allows to:
-        # - run different checks on the input data;
-        # - define some attributes associated to the input data: `n_features_in_` and
-        #   `feature_names_in_`.
-        X, y = self._validate_data(X, y, accept_sparse=True)
-        X = X.flatten()
+        if X.ndim == 1:
+            if len(y) != len(X):
+                raise ValueError("X and y must have the same length")
+            # if input is list or array reshape it for sklearn compatibility
+            X = X.reshape(-1, 1)
+        X, y = self._validate_data(X, y, accept_sparse=True, reset=True)
         self.norm_X_global_, self.min_X_global, self.max_X_global = normalize_array(X)
         self.norm_y_global_, self.min_y_global, self.max_y_global = normalize_array(y)
         self.n_neighbors_ = round(self.smoothing * X.shape[0])
         self.is_fitted_ = True
-        # `fit` should always return `self`
         return self
 
     def estimate(self, X):
-
         norm_X_local = normalize_value(X, self.min_X_global, self.max_X_global)
         distances = np.abs(self.norm_X_global_ - norm_X_local)
         min_range = get_min_range(distances, self.n_neighbors_)
         weights = get_weights(distances, min_range)
-
-        if self.use_matrix:
+        if self.degree == 1:
+            y = estimate_linear(
+                min_range,
+                self.norm_X_global_,
+                self.norm_y_global_,
+                weights,
+                norm_X_local,
+            )
+        else:
             y = estimate_polynomial(
                 self.n_neighbors_,
                 weights,
@@ -321,14 +324,7 @@ class LOESS(RegressorMixin, BaseEstimator):
                 norm_X_local,
                 min_range,
             )
-        else:
-            y = estimate_linear(
-                min_range,
-                self.norm_X_global_,
-                self.norm_y_global_,
-                weights,
-                norm_X_local,
-            )
+
         denormalized_y = denormalize(y, self.min_y_global, self.max_y_global)
         return denormalized_y
 
@@ -337,21 +333,21 @@ class LOESS(RegressorMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
+        X : {array-like}, shape (n, 1)
+            The collection of values to estimate. Must be 1-dimensional (list/array/pandas series)
 
         Returns
         -------
-        y : ndarray, shape (n_samples,)
-            Returns an array of ones.
+        y : ndarray, shape (n, 1)
+            Returns an array containing the estimated values.
         """
         # Check if fit had been called
         check_is_fitted(self)
-        # We need to set reset=False because we don't want to overwrite `n_features_in_`
-        # `feature_names_in_` but only check that the shape is consistent.
+        if X.ndim == 1:
+            # if input is list or array reshape it for sklearn compatibility
+            X = X.reshape(-1, 1)
+
         X = self._validate_data(X, accept_sparse=True, reset=False)
-        X = X.flatten()
-        predicted = []
-        for i in X:
-            predicted.append(self.estimate(i))
-        return np.array(predicted)
+        predicted = np.vectorize(self.estimate)(X)
+        predicted = predicted.flatten()
+        return predicted
