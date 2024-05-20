@@ -272,14 +272,40 @@ def validate_smoothing(smoothing, degree, n_obs):
         If smoothing is not between (degree + 1) / n_obs and 1
     """
     smoothing_min = (degree + 1) / n_obs
-    if smoothing_min <= smoothing < 1:
+    if smoothing_min <= smoothing <= 1:
         return smoothing
     raise ValueError(
-        "Smoothing for a polynomial with {degree} degrees "
-        "must be between {smoothing_min} and 1".format(
+        f"Smoothing for a polynomial with {degree} degrees \
+        must be between {smoothing_min} and 1".format(
             degree=degree, smoothing_min=smoothing_min
         )
     )
+
+
+def to_numpy_array(data):
+    """
+    Converts input data into a NumPy array.
+
+    Parameters:
+    data (array-like): Input data, which can be a list, NumPy array, pandas Series, etc.
+
+    Returns:
+    np.ndarray: Converted NumPy array.
+    """
+    if isinstance(data, np.ndarray):
+        if data.ndim == 1:
+            return data.reshape(-1, 1)
+        elif data.ndim >= 1:
+            if data.shape[0] > 1:
+                raise ValueError("Input numpy arrays must be 1 x n shaped")
+            else:
+                return data
+    elif isinstance(data, (list, tuple)):
+        return np.array(data).reshape(-1, 1)
+    elif isinstance(data, pd.Series):
+        return data.values.reshape(-1, 1)
+    else:
+        raise TypeError(f"Unsupported input type: {type(data)}")
 
 
 class LOESS(RegressorMixin, BaseEstimator):
@@ -336,20 +362,19 @@ class LOESS(RegressorMixin, BaseEstimator):
         self : object
             Returns self.
         """
-        validate_smoothing(self.smoothing, self.degree, X.shape[0])
-        if X.ndim == 1:
-            if len(y) != len(X):
-                raise ValueError("X and y must have the same length")
-            # if input is list or array reshape it for sklearn compatibility
-            X = X.reshape(-1, 1)
+        X = to_numpy_array(X)
+        validate_smoothing(self.smoothing, self.degree, len(X))
+        self.n_neighbors_ = round(self.smoothing * X.shape[0])
+
         X, y = self._validate_data(X, y, accept_sparse=True, reset=True)
         self.norm_X_global_, self.min_X_global, self.max_X_global = normalize_array(X)
         self.norm_y_global_, self.min_y_global, self.max_y_global = normalize_array(y)
-        self.n_neighbors_ = round(self.smoothing * X.shape[0])
         self.is_fitted_ = True
         return self
 
     def estimate(self, X):
+        if X == np.nan:
+            return np.nan
         norm_X_local = normalize_value(X, self.min_X_global, self.max_X_global)
         distances = np.abs(self.norm_X_global_ - norm_X_local)
         min_range = get_min_range(distances, self.n_neighbors_)
@@ -391,12 +416,7 @@ class LOESS(RegressorMixin, BaseEstimator):
         """
         # Check if fit had been called
         check_is_fitted(self)
-        if type(X) in [int, float]:
-            X = np.array([[X]])
-        if X.ndim == 1:
-            # if input is list or array reshape it for sklearn compatibility
-            X = X.reshape(-1, 1)
-
+        X = to_numpy_array(X)
         X = self._validate_data(X, accept_sparse=True, reset=False)
         predicted = np.vectorize(self.estimate)(X)
         predicted = predicted.flatten()
